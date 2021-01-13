@@ -10,6 +10,19 @@ router.get("/", verify, async (req, res) => {
   res.send(posts);
 });
 
+//Get post for specific user
+router.get("/myposts", verify, async (req, res) => {
+  try {
+    const myposts = await Post.find({ postedBy: req.user._id }).populate(
+      "postedBy",
+      "_id name"
+    );
+    res.send({ status: true, posts: myposts });
+  } catch (err) {
+    res.status(404).send({ status: false, error: "Error Getting My Posts" });
+  }
+});
+
 //Get posts by id
 router.get("/:postId", verify, async (req, res) => {
   try {
@@ -23,19 +36,6 @@ router.get("/:postId", verify, async (req, res) => {
     res
       .status(404)
       .send({ status: false, error: "Error Getting post by id" + e });
-  }
-});
-
-//Get post for specific user
-router.get("/myposts", verify, async (req, res) => {
-  try {
-    const myposts = await Post.find({ postedBy: req.user._id }).populate(
-      "postedBy",
-      "_id name"
-    );
-    res.send({ status: true, posts: myposts });
-  } catch (err) {
-    res.status(404).send({ status: false, error: "Error Getting My Posts" });
   }
 });
 

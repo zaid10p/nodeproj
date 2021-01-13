@@ -17,7 +17,7 @@ module.exports = function (req, res , next) {
             next();
         })
     }catch(e){
-        res.status(401).send({status : false, error : 'Invalid Token'});
+        res.status(401).send({status : false, error : JSON.stringify(e)});
         return false;
     }
 }
