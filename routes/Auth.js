@@ -2,9 +2,11 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const User = require("../models/User");
+const BlacklistToken = require("../models/BlacklistToken");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const verify = require("./verifyToken");
+const { v4: uuidv4 } = require("uuid");
 
 router.post("/signup", async (req, res) => {
   const { name, email, password, pic } = req.body;
@@ -51,17 +53,30 @@ router.post("/signin", async (req, res) => {
       .send({ error: "Email Or Password is Invalid", status: false });
   }
 
-  //Generating JWT Token
-  const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET , { expiresIn : "1h"});
+  const token = await generateToken(user._id);
   const { _id, name } = user;
   res.send({ token, success: true, user: { _id, name, email } });
 });
 
-router.get("/private", verify, (req, res) => {
-  res.send("private Route access  " + JSON.stringify(req.user));
+router.post("/logout", verify, async (req, res) => {
+  const token = req.header("auth-token");
+  const blToken = new BlacklistToken({ token, postedBy: req.user });
+  const result = await blToken.save();
+  res.send("Logout Success");
 });
+
 router.get("/test", (req, res) => {
   res.send({ success: true, message: "Test route" });
 });
 
 module.exports = router;
+
+const generateToken = async (userId) => {
+  const token = await jwt.sign({ _id: userId }, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+    jwtid: uuidv4(),
+    subject: userId.toString(),
+  });
+
+  return token;
+};
