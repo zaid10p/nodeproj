@@ -1,0 +1,327 @@
+openapi: 3.0.1
+info:
+  title: Node Api
+  description: Node CRUD Api with JWT Auth
+  version: '1.1'
+servers:
+  - url: 'http://localhost:5000'
+paths:
+  /api/signin:
+    post:
+      security: []
+      description: Sign in Api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                email:
+                  type: string
+            examples:
+              '1':
+                value: |-
+                  {
+                      "email" : "testuser2@test.com",
+                      "password" : "testuser2"
+                  }
+      responses:
+        '200':
+          description: signin response with token
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  success:
+                    type: boolean
+                  user:
+                    type: object
+                    $ref : "#/components/schemas/User"
+      servers:
+        - url: 'http://localhost:5000'
+    servers:
+      - url: 'http://localhost:5000'
+
+  /api/signup:
+    post:
+      security: []
+      description: register new user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref : "#/components/schemas/User"
+            examples:
+              '0':
+                value: |-
+                  {
+                      "name" : "Test User",
+                      "email" : "testuser2@test.com",
+                      "password" : "testuser2"
+                  }
+      responses:
+        '200':
+          description: New user response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref : "#/components/schemas/User"
+      servers:
+        - url: 'http://localhost:5000'
+    servers:
+      - url: 'http://localhost:5000'
+  /api/logout:
+    post:
+      description: Logout Call (Blacklist the token )
+      parameters:
+        - $ref: '#/components/parameters/token'
+      responses:
+        '200':
+          description: Post created response
+          content:
+            application/json; charset=utf-8:
+              schema:  
+                type: string
+                example: logout success
+        '401':
+          description: Unauthorized response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref : "#/components/schemas/401"        
+  /api/test:
+    get:
+      security: []
+      description: testing 
+      responses:
+        '200':
+          description: testing endpoint
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: string
+              examples: {}
+
+  /api/posts/create:
+    post:
+      description: Create post 
+      parameters:
+        - $ref: '#/components/parameters/token'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertPost"
+            examples:
+              '0':
+                value: |-
+                  {
+                      "title" : "Post title ",
+                      "body" : "body details of post 3"
+                  }
+      responses:
+        '200':
+          description: Post created response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  post:
+                    type: object
+                    $ref : "#/components/schemas/Post"
+        '401':
+          description: Unauthorized response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref : "#/components/schemas/401"
+  /api/posts:
+    get:
+      description: Get All posts
+      parameters:
+        - $ref: '#/components/parameters/token'
+      responses:
+        '200':
+          description: Get All posts
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: array
+                items:
+                  $ref : "#/components/schemas/Post"
+              examples: {}
+        '401':
+          description: Unauthorized response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref : "#/components/schemas/401"
+  
+  /api/posts/myposts:
+    get:
+      description: get only signed in user posts
+      parameters:
+        - $ref: '#/components/parameters/token'
+      responses:
+        '200':
+          description: post repsonse
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: array
+                items:
+                  $ref : "#/components/schemas/Post"
+ 
+  /api/posts/{postId}:
+    get:
+      description: get post by id
+      parameters:
+        - $ref: '#/components/parameters/postId'
+        - $ref: '#/components/parameters/token'
+      responses:
+        '200':
+          description: get post by id
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref : "#/components/schemas/Post"
+        '401':
+          description: Unauthorized response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref : "#/components/schemas/401"
+    put:
+      description: post to update
+      parameters:
+        - $ref: '#/components/parameters/postId'
+        - $ref: '#/components/parameters/token'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertPost"
+            examples:
+              '0':
+                value: |-
+                  {
+                      "title" : "Post title upddd ",
+                      "body" : "body details of post 3"
+                  }
+      responses:
+        '200':
+          description: Updated post
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref : "#/components/schemas/Post"
+        '401':
+          description: Unauthorized response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref : "#/components/schemas/401"        
+    delete:
+      description: post to delete
+      parameters:
+        - $ref: '#/components/parameters/postId'
+        - $ref: '#/components/parameters/token'
+      responses:
+        '200':
+          description: delete response
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: string
+              examples: {}
+      servers:
+        - url: 'http://localhost:5000'
+        
+security:
+- app_id: []        
+components:
+  schemas:
+    Post:
+      type: object
+      properties:
+        _id:
+          type: integer
+          format: int64
+        title: 
+          type : string
+          example: post title
+        body:
+          type: string
+          example: post body
+        postedBy:
+          type : object
+          properties:
+            _id:
+             type: integer
+             description: user id
+            name:
+              type: string
+              example: user name
+            email:
+              type: string
+              example: user email
+            date:
+              type: string
+    User:
+      type: object
+      properties:
+        _id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    UpsertPost:
+      type: object
+      properties:
+        title: 
+          type : string
+        body:
+          type: string
+    401:
+      type: object
+      properties:
+        status: 
+          type : boolean
+          example: false
+        error:
+          type: string
+  parameters:
+    token:
+      name: auth-token
+      in: header
+      required: true
+      description: Token to be passed as a header
+      schema:
+        type: string
+        example: >-
+            eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZmZlZWIzZWZlMWEwMDc0NzZjZDQ5MjYiLCJpYXQiOjE2MTA1NDE5MzQsImV4cCI6MTYxMDU0NTUzNH0.ORi5UUx0Uri8Q6HpApvjtnisKyT8QAo424nrN_CraEI
+    postId:
+      in: path
+      required: true
+      description: ID of the post 
+      name: postId
+      schema:
+        type: integer
+  securitySchemes:
+    app_id:
+      type: apiKey
+      description: Token authorize requests.
+      name: auth-token
+      in: header
